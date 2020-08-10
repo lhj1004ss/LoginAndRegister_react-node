@@ -1,12 +1,12 @@
 const express = require("express");
-
 const app = express();
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const { auth } = require("./middleware/auth");
+
 const { User } = require("./models/User");
 const config = require("./config/key");
-
 // application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 // application/json
@@ -30,7 +30,7 @@ mongoose
 
 app.get("/", (req, res) => res.send("hello world hehehe"));
 
-app.post("/register", (req, res) => {
+app.post("/api/users/register", (req, res) => {
   //put info of register from client(user) into database
   const user = new User(req.body);
   // save to DB
@@ -41,11 +41,13 @@ app.post("/register", (req, res) => {
     });
   });
 });
-app.post("/login", (req, res) => {
+
+// login
+app.post("/api/users/login", (req, res) => {
   // find a requested email from database
 
-  User.findOne({ email: req.body.email }, (err, userInfo) => {
-    if (!userInfo) {
+  User.findOne({ email: req.body.email }, (err, user) => {
+    if (!user) {
       return res.json({
         loginSuccess: false,
         message: "your email is invaild",
@@ -68,6 +70,30 @@ app.post("/login", (req, res) => {
         .cookie("x_auth", user.token)
         .status(200)
         .json({ loginSuccess: true, userId: user._id });
+    });
+  });
+});
+// authentication
+app.get("/api/users/auth", auth, (req, res) => {
+  // now authentication is ture after middleware function
+
+  res.status(200).json({
+    _id: req.user._id,
+    // admin user or normal user(0)
+    isAdmin: req.user.role === 0 ? false : true,
+    isAuth: true,
+    email: req.user.email,
+    name: req.user.name,
+    lastname: req.user.lastname,
+    role: req.user.role,
+    image: req.user.image,
+  });
+});
+app.get("/api/users/logout", auth, (req, res) => {
+  User.findOneAndUpdate({ _id: req.user._id }, { token: "" }, (err, user) => {
+    if (err) return res.json({ success: false, err });
+    return res.status(200).send({
+      success: true,
     });
   });
 });
