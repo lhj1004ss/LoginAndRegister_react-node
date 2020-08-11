@@ -3,10 +3,10 @@ const app = express();
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const { auth } = require("./middleware/auth");
+const { auth } = require("./server/middleware/auth");
 
-const { User } = require("./models/User");
-const config = require("./config/key");
+const { User } = require("./server/models/User");
+const config = require("./server/config/key");
 // application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 // application/json
@@ -29,6 +29,10 @@ mongoose
   .catch((err) => console.log(err));
 
 app.get("/", (req, res) => res.send("hello world hehehe"));
+
+app.get("/api/hello", (req, res) => {
+  res.send("hello frontend");
+});
 
 app.post("/api/users/register", (req, res) => {
   //put info of register from client(user) into database
